@@ -13,9 +13,9 @@ class ScoringRule(SQLModel, table=True):
         foreign_key="questions.id",
         index=True,
         nullable=False,
-        ondelete="CASCADE"
+        sa_column_kwargs={"ondelete": "CASCADE"}
     )
-    question: Optional["Question"] = Relationship(cascade_delete=True)
+    question: Optional["Question"] = Relationship()
     question_type: int = Field(nullable=False)
     operator: int = Field(nullable=False)
     threshold_min: int = Field(nullable=False)

@@ -14,13 +14,13 @@ class QuestionCategoryMap(SQLModel, table=True):
         foreign_key="questions.id",
         index=True,
         nullable=False,
-        ondelete="CASCADE"
+        sa_column_kwargs={"ondelete": "CASCADE"}
     )
-    question: Optional["Question"] = Relationship(cascade_delete=True)
+    question: Optional["Question"] = Relationship()
     category_id: int = Field(
-        foreign_key="medical_category.id",
+        foreign_key="medical_categories.id",
         index=True,
         nullable=False,
-        ondelete="CASCADE"
+        sa_column_kwargs={"ondelete": "CASCADE"}
     )
-    category: Optional["MedicalCategory"] = Relationship(cascade_delete=True)
+    category: Optional["MedicalCategory"] = Relationship()

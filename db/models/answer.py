@@ -15,22 +15,22 @@ class Answer(SQLModel, table=True):
         foreign_key="room_types.id",
         index=True,
         nullable=False,
-        ondelete="CASCADE"
+        sa_column_kwargs={"ondelete": "CASCADE"}
     )
-    room_type: Optional["RoomType"] = Relationship(cascade_delete=True)
+    room_type: Optional["RoomType"] = Relationship()
     hotel_id: int = Field(
         foreign_key="hotels.id",
         index=True,
         nullable=False,
-        ondelete="CASCADE"
+        sa_column_kwargs={"ondelete": "CASCADE"}
     )
-    hotel: Optional["Hotel"] = Relationship(cascade_delete=True)
+    hotel: Optional["Hotel"] = Relationship()
     question_id: int = Field(
         foreign_key="questions.id",
         index=True,
         nullable=False,
-        ondelete="CASCADE"
+        sa_column_kwargs={"ondelete": "CASCADE"}
     )
-    question: Optional["Question"] = Relationship(cascade_delete=True)
+    question: Optional["Question"] = Relationship()
     raw_response: str = Field(min_length=1, nullable=False)
     normalized_score: float = Field(nullable=False)

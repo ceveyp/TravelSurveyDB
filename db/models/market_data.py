@@ -13,9 +13,9 @@ class MarketData(SQLModel, table=True):
         foreign_key="disabilities.id",
         index=True,
         nullable=False,
-        ondelete="CASCADE"
+        sa_column_kwargs={"ondelete": "CASCADE"}
     )
-    disability: Optional["Disability"] = Relationship(cascade_delete=True)
+    disability: Optional["Disability"] = Relationship()
     impacted: int = Field(nullable=False)
     impacted_workforce: int = Field(nullable=False)
     likelihood: float = Field(nullable=False)

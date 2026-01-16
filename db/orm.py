@@ -3,8 +3,6 @@ from functools import lru_cache
 from sqlalchemy import create_engine, event
 from sqlalchemy.orm import sessionmaker, Session as dbSession
 
-from db.base import Base
-
 
 @lru_cache
 def get_db_url() -> str:
@@ -29,9 +27,3 @@ def enable_sqlite_fk(dbapi_conn, conn_record):
 
 
 Session = sessionmaker(bind=engine)
-session = dbSession(engine)
-
-
-def create_orm():
-    engine.connect()
-    Base.metadata.create_all(engine)

@@ -1,7 +1,5 @@
-from sqlalchemy.orm import declarative_base, configure_mappers
+from sqlalchemy.orm import configure_mappers
 from sqlmodel import SQLModel
-
-Base = declarative_base()
 
 import db.models
 

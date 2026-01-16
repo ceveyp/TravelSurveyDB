@@ -14,14 +14,14 @@ class QuestionDisabilityMap(SQLModel, table=True):
         foreign_key="questions.id",
         index=True,
         nullable=False,
-        ondelete="CASCADE"
+        sa_column_kwargs={"ondelete": "CASCADE"}
     )
-    question: Optional["Question"] = Relationship(cascade_delete=True)
+    question: Optional["Question"] = Relationship()
     disability_id: int = Field(
         foreign_key="disabilities.id",
         index=True,
         nullable=False,
-        ondelete="CASCADE"
+        sa_column_kwargs={"ondelete": "CASCADE"}
     )
-    disability: Optional["Disability"] = Relationship(cascade_delete=True)
+    disability: Optional["Disability"] = Relationship()
     reason: str = Field(nullable=False, max_length=1000)

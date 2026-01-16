@@ -13,8 +13,7 @@ class RoomType(SQLModel, table=True):
         foreign_key="hotels.id",
         index=True,
         nullable=False,
-        ondelete="CASCADE"
+        sa_column_kwargs={"ondelete": "CASCADE"}
     )
-    hotel: Optional["Hotel"] = Relationship(cascade_delete=True)
+    hotel: Optional["Hotel"] = Relationship()
     name: str = Field(max_length=255, nullable=False)
-    

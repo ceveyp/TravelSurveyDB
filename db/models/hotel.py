@@ -13,9 +13,9 @@ class Hotel(SQLModel, table=True):
         foreign_key="hotel_chains.id",
         index=True,
         nullable=False,
-        ondelete="CASCADE"
+        sa_column_kwargs={"ondelete": "CASCADE"}
     )
-    chain: Optional["HotelChain"] = Relationship(cascade_delete=True)
+    chain: Optional["HotelChain"] = Relationship()
     cvent_id: int = Field(default=None, nullable=False, unique=True, index=True)
     property_name: str = Field(max_length=500, nullable=False)
     address: str = Field(max_length=500, nullable=False)
