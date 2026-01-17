@@ -6,6 +6,7 @@ from sqlalchemy import pool
 from alembic import context
 
 from db.base import target_metadata
+from db.orm import get_db_url
 
 # import all models to register them
 

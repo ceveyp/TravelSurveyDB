@@ -1,12 +1,12 @@
-from functools import lru_cache
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
 
-from sqlalchemy import create_engine, event
-from sqlalchemy.orm import sessionmaker, Session as dbSession
+from utils.config import get_config
 
 
-@lru_cache
-def get_db_url() -> str:
-    return f"sqlite:///survey_data.db"
+def get_db_url():
+    config = get_config()
+    return f"postgresql://{config.db_user}:{config.db_pass}@{config.db_host}:{config.db_port}/{config.db_name}"
 
 
 engine = create_engine(
@@ -17,13 +17,5 @@ engine = create_engine(
     max_overflow=20,
     pool_timeout=30
 )
-
-
-@event.listens_for(engine, "connect")
-def enable_sqlite_fk(dbapi_conn, conn_record):
-    cursor = dbapi_conn.cursor()
-    cursor.execute("PRAGMA foreign_keys=ON;")
-    cursor.close()
-
 
 Session = sessionmaker(bind=engine)

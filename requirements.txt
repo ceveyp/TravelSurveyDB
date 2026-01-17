@@ -2,3 +2,4 @@ sqlalchemy
 sqlmodel
 alembic
 pydantic_settings
+psycopg2-binary

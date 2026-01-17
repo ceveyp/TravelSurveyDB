@@ -3,3 +3,4 @@
 db/__pycache__/
 db/models/__pycache__/
 utils/__pycache__/
+alembic/__pycache__/
