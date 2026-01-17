@@ -18,6 +18,7 @@ class MarketData(SQLModel, table=True):
         )
     )
     disability: Optional["Disability"] = Relationship()
+    definition: str = Field(nullable=False)
     impacted: int = Field(nullable=False)
     impacted_workforce: int = Field(nullable=False)
     likelihood: float = Field(nullable=False)

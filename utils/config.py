@@ -1,6 +1,7 @@
 from functools import lru_cache
 from pathlib import Path
 
+from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 ENV_FILE_PATH = Path(__file__).parent.parent / ".env"
@@ -12,6 +13,7 @@ class Settings(BaseSettings):
     db_user: str
     db_pass: str
     db_name: str
+    log_level: str = Field(default='DEBUG')
 
 
     model_config = SettingsConfigDict(

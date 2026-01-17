@@ -7,7 +7,7 @@ from sqlmodel import SQLModel, Field
 class Question(SQLModel, table=True):
     __tablename__ = 'questions'
     id: Optional[int] = Field(default=None, primary_key=True, sa_type=BigInteger)
-    question_text: str = Field(max_length=255, nullable=False)
+    question_text: str = Field(max_length=255, nullable=False, index=True)
     definition: str = Field(max_length=1000, nullable=False)
     notes: str = Field(max_length=1000, nullable=False)
     in_assessment: bool = Field(default=True, nullable=False)

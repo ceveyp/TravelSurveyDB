@@ -4,3 +4,8 @@ db/__pycache__/
 db/models/__pycache__/
 utils/__pycache__/
 alembic/__pycache__/
+taxonomy_migration/readers/__pycache__/
+taxonomy_migration/__pycache__/
+constants/spreadsheet/column_names/__pycache__/
+constants/spreadsheet/__pycache__/
+constants/__pycache__/
