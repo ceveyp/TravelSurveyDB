@@ -1,1 +1,5 @@
 /.idea
+/.env
+db/__pycache__/
+db/models/__pycache__/
+utils/__pycache__/

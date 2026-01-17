@@ -1,2 +1,4 @@
 sqlalchemy
 sqlmodel
+alembic
+pydantic_settings

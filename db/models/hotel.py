@@ -1,6 +1,6 @@
 from typing import Optional
 
-from sqlalchemy import BigInteger
+from sqlalchemy import BigInteger, Column, ForeignKey
 from sqlmodel import SQLModel, Field, Relationship
 
 from db.models.hotel_chain import HotelChain
@@ -8,12 +8,14 @@ from db.models.hotel_chain import HotelChain
 
 class Hotel(SQLModel, table=True):
     __tablename__ = 'hotels'
-    id: Optional[int] = Field(default=None, primary_key=True, sa_column_kwargs={"type_": BigInteger})
+    id: Optional[int] = Field(default=None, primary_key=True, sa_type=BigInteger)
     chain_id: int = Field(
-        foreign_key="hotel_chains.id",
-        index=True,
-        nullable=False,
-        sa_column_kwargs={"ondelete": "CASCADE"}
+        sa_column=Column(
+            BigInteger,
+            ForeignKey("hotel_chains.id", ondelete="CASCADE"),
+            nullable=False,
+            index=True
+        )
     )
     chain: Optional["HotelChain"] = Relationship()
     cvent_id: int = Field(default=None, nullable=False, unique=True, index=True)

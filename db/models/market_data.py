@@ -1,6 +1,6 @@
 from typing import Optional
 
-from sqlalchemy import BigInteger
+from sqlalchemy import BigInteger, Column, ForeignKey
 from sqlmodel import SQLModel, Field, Relationship
 
 from db.models.disability import Disability
@@ -8,12 +8,14 @@ from db.models.disability import Disability
 
 class MarketData(SQLModel, table=True):
     __tablename__ = 'market_data'
-    id: Optional[int] = Field(default=None, primary_key=True, sa_column_kwargs={"type_": BigInteger})
+    id: Optional[int] = Field(default=None, primary_key=True, sa_type=BigInteger)
     disability_id: int = Field(
-        foreign_key="disabilities.id",
-        index=True,
-        nullable=False,
-        sa_column_kwargs={"ondelete": "CASCADE"}
+        sa_column=Column(
+            BigInteger,
+            ForeignKey("disabilities.id", ondelete="CASCADE"),
+            nullable=False,
+            index=True
+        )
     )
     disability: Optional["Disability"] = Relationship()
     impacted: int = Field(nullable=False)
