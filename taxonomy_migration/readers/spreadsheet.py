@@ -1,13 +1,14 @@
 import sys
 from pathlib import Path
-from typing import Dict
+from typing import Dict, List
 
 import pandas as pd
 from pandas import DataFrame
 
 from constants.spreadsheet.column_names.market_data import MarketDataColumnNamesEnum
+from constants.spreadsheet.column_names.questions import QuestionsColumnNamesEnum
 from constants.spreadsheet.taxonomy import TAXONOMY_SPREADSHEET_GRID_NAMES, TaxonomySpreadsheetGridNamesEnum
-from db.models import MarketData, Disability
+from db.models import MarketData, Disability, Question
 from taxonomy_migration.common import get_field, normalize_field, clean_values
 from utils.logger import get_logger
 
@@ -23,12 +24,34 @@ class TaxonomySpreadsheetReader:
             sys.exit(1)
         self._dfs: DataFrame | None = None
 
+    def _read_sheet(self, sheet: TaxonomySpreadsheetGridNamesEnum) -> List[Dict]:
+        sheet = self._dfs[sheet]
+        sheet_data = sheet.map(clean_values)
+        return sheet_data.to_dict(orient="records")
+
+    def _read_questions_sheet(self):
+        # Read questions sheet
+        logger.debug(f"Reading questions sheet")
+        questions_sheet_rows = self._read_sheet(TaxonomySpreadsheetGridNamesEnum.QUESTIONS)
+
+        for row in questions_sheet_rows:
+            question_text = get_field(row, QuestionsColumnNamesEnum.QUESTION, str)
+            question_key = normalize_field(question_text)
+            question = Question(
+                question_text=question_text,
+                question_key=question_key,
+                definition=get_field(row, QuestionsColumnNamesEnum.QUESTION_DEFINITION, str),
+                notes=get_field(row, QuestionsColumnNamesEnum.NOTES, str),
+                in_assessment=True,
+                measurement_text=get_field()
+            )
+
+
+
     def _read_market_data_sheet(self):
         # Read market data sheet
         logger.debug(f"Reading market data sheet")
-        market_data_sheet = self._dfs[TaxonomySpreadsheetGridNamesEnum.MARKET_DATA]
-        market_data_sheet = market_data_sheet.map(clean_values)
-        market_data_rows = market_data_sheet.to_dict(orient="records")
+        market_data_rows = self._read_sheet(TaxonomySpreadsheetGridNamesEnum.MARKET_DATA)
 
         disability_key_entity_map: Dict[str, Disability] = {}
         disability_key_market_data_map: Dict[str, MarketData] = {}
@@ -67,3 +90,4 @@ class TaxonomySpreadsheetReader:
             sheet_name=TAXONOMY_SPREADSHEET_GRID_NAMES
         )
         self._read_market_data_sheet()
+        self._read_questions_sheet()
