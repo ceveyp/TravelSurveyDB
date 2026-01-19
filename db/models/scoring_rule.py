@@ -21,5 +21,4 @@ class ScoringRule(SQLModel, table=True):
     operator: str = Field(nullable=False, max_length=4, index=True, default='==')
     threshold_min: Optional[float] = Field(default=None, nullable=True)
     threshold_max: Optional[float] = Field(default=None, nullable=True)
-    score: float = Field(nullable=False)
     max_score: float = Field(nullable=False)

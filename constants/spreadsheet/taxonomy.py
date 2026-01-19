@@ -2,9 +2,9 @@ from enum import StrEnum
 
 
 class TaxonomySpreadsheetGridNamesEnum(StrEnum):
-    QUESTIONS = 'General Questions'
-    TAXONOMY = 'Taxonomy'
-    MARKET_DATA = 'Market Data'
+    QUESTIONS = 'questions'
+    TAXONOMY = 'taxonomy'
+    MARKET_DATA = 'market_data'
 
 
 TAXONOMY_SPREADSHEET_GRID_NAMES = [

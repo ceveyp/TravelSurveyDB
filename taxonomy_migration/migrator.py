@@ -13,7 +13,8 @@ class TaxonomyMigrator:
         self._reader = TaxonomySpreadsheetReader(file_path)
 
     def migrate(self):
-        self._reader.read()
+        taxonomy = self._reader.read()
+        print(taxonomy)
 
 
 def migrate(file_path: str):
@@ -21,4 +22,4 @@ def migrate(file_path: str):
 
 
 if __name__ == '__main__':
-    migrate(r"C:/Users/phili/Documents/Jobs/TravelDB/taxonomy.ods")
+    migrate(r"C:/Users/phili/Documents/Jobs/TravelDB/taxonomy_new.xlsx")

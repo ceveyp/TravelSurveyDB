@@ -5,7 +5,7 @@ class MarketDataColumnNamesEnum(StrEnum):
     DISABILITY = 'Disability'
     IMPACTED = 'People (US Only)'
     IMPACTED_WORKFORCE = 'WorkForce (US Only)'
-    LIKELIHOOD = 'Likelyhood'
+    LIKELIHOOD = 'Likelihood'
     LABOR_STAT = 'Labor Stat'
     STATISTICS = 'Statistics'
     STATISTICS_SOURCE = 'Disablity Statistics Source (Likelyhood)'

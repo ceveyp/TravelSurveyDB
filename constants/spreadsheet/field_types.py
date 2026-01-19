@@ -1,11 +1,7 @@
 from enum import Enum
+from typing import Literal
 
-
-class QuestionDataType(str, Enum):
-    BOOLEAN = "boolean"
-    INTEGER = "number"
-    FLOAT = "float"
-    TEXT = "text"
+QuestionDataTypes = Literal['boolean', 'number', 'float', 'text']
 
 
 class QuestionTypeOperator(str, Enum):

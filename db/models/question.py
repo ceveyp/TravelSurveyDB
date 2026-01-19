@@ -1,7 +1,20 @@
-from typing import Optional
+from typing import Optional, Literal
 
+from pydantic import BaseModel
 from sqlalchemy import BigInteger
 from sqlmodel import SQLModel, Field
+
+from constants.spreadsheet.field_types import QuestionDataTypes
+
+
+StringBooleanRep = Literal['yes', 'no']
+
+
+class QuestionInputValidator(BaseModel):
+    question_type: QuestionDataTypes
+    is_range: StringBooleanRep
+    applies_per_room_type: StringBooleanRep
+    in_assessment: StringBooleanRep
 
 
 class Question(SQLModel, table=True):
@@ -17,6 +30,7 @@ class Question(SQLModel, table=True):
 
     question_type: str = Field(nullable=False, index=True, max_length=16)
     question_type_notes: Optional[str] = Field(max_length=255)
+    is_range: bool = Field(nullable=False, default=False)
 
     in_assessment: bool = Field(default=True, nullable=False)
 
