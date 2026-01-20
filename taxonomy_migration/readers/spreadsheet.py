@@ -1,4 +1,5 @@
 import sys
+from collections import defaultdict
 from enum import StrEnum
 from pathlib import Path
 from typing import Dict, List, Type
@@ -134,6 +135,8 @@ class TaxonomySpreadsheetReader:
                 question_medical_category_map = QuestionCategoryMap()
                 question_medical_category_map.question = question
                 question_medical_category_map.category = self._medical_category_key_entity_map[medical_category_key]
+
+                self._question_key_medical_categories_map[question_key].append()
 
             except Exception as e:
                 logger.exception(e)

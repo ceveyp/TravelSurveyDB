@@ -9,3 +9,6 @@ taxonomy_migration/__pycache__/
 constants/spreadsheet/column_names/__pycache__/
 constants/spreadsheet/__pycache__/
 constants/__pycache__/
+alembic/versions/__pycache__/
+clients/__pycache__/
+contacts_importer/__pycache__/

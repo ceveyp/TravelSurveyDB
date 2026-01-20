@@ -7,7 +7,7 @@ class ContactsColumnNamesEnum(StrEnum):
     BRAND_NAME = 'Brand Name'
     PROPERTY_NAME = 'Property Name'
     ADDRESS = 'Property Address'
-    CITY = 'city'
+    CITY = 'City'
     STATE = 'State/Province Code'
     COUNTRY = 'Country Name'
     POSTAL_CODE = 'Postal Code'

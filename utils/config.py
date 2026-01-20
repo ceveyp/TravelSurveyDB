@@ -13,6 +13,7 @@ class Settings(BaseSettings):
     db_user: str
     db_pass: str
     db_name: str
+    google_api_key: str
     log_level: str = Field(default='DEBUG')
 
 

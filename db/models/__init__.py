@@ -1,5 +1,4 @@
 from db.models.answer import Answer
-from db.models.contact import Contact
 from db.models.disability import Disability
 from db.models.hotel import Hotel
 from db.models.hotel_chain import HotelChain

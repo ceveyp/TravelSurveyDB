@@ -16,10 +16,17 @@ def normalize_field(value: str) -> str:
     return value
 
 
-def get_field(row: Dict, column_name: StrEnum, value_type: Any | None = str) -> Any:
+def get_field(
+        row: Dict,
+        column_name: StrEnum,
+        value_type: Any | None = str,
+        default: Any | None = None
+) -> Any:
     value = row[column_name]
+    if not value:
+        return default
     if isinstance(value, float) and math.isnan(value):
-        return None
+        return default
     if value_type:
         if value or isinstance(value, int):
             value = value_type(value)
