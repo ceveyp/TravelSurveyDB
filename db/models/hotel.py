@@ -28,8 +28,8 @@ class Hotel(SQLModel, table=True):
     state: str = Field(max_length=8, nullable=False)
     country: str = Field(max_length=45, nullable=False)
     postal_code: str = Field(max_length=45, nullable=False)
-    phone: str = Field(max_length=45, nullable=False)
-    url: str = Field(max_length=500, nullable=False, index=True)
+    phone: Optional[str] = Field(default=None, max_length=45, nullable=True)
+    url: Optional[str] = Field(default=None, max_length=500, nullable=True, index=True)
 
 
 class HotelContact(SQLModel, table=True):

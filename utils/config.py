@@ -14,6 +14,8 @@ class Settings(BaseSettings):
     db_pass: str
     db_name: str
     google_api_key: str
+    alchemer_api_key: str
+    alchemer_api_secret: str
     log_level: str = Field(default='DEBUG')
 
 

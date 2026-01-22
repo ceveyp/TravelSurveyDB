@@ -7,3 +7,4 @@ pandas
 odfpy
 openpyxl
 requests
+email-validator
