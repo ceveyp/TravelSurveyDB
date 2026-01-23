@@ -10,6 +10,10 @@ from utils.logger import get_logger
 logger = get_logger(__name__)
 
 
+# TODO: RATE LIMIT
+# RuntimeError: Alchemer API error: {"result_ok":false,"code":429,"message":"Please wait for other requests to complete"}
+
+
 class Alchemer:
     def __init__(self):
         self._config = get_config()
@@ -19,11 +23,23 @@ class Alchemer:
             "api_token_secret": self._config.alchemer_api_secret
         }
 
-    def _api_call(self, method: str, uri: str, params: Dict | None = None) -> Dict:
+    def _api_call(
+            self,
+            method: str,
+            uri: str,
+            params: Dict | None = None,
+            body: Dict | None = None
+    ) -> Dict:
         if not params:
             params = {}
         params.update(**self._auth_params)
-        resp = requests.request(method=method, url=uri, params=params, timeout=5)
+        resp = requests.request(
+            method=method,
+            url=uri,
+            params=params,
+            json=body,
+            timeout=120
+        )
         if not resp.ok:
             raise RuntimeError(f"Alchemer API error: {resp.text}")
         data = resp.json()
@@ -66,3 +82,18 @@ class Alchemer:
         }
         data = self._api_call('PUT', uri, params)
         return data["data"]["id"]
+
+    def get_survey_response(self, survey_id: int, response_id: int) -> Dict:
+        uri = f"{self._base_url}/survey/{survey_id}/surveyresponse/{response_id}"
+        return self._api_call('GET', uri)
+
+    def update_survey_question_response(
+            self,
+            survey_id: int,
+            response_id: int,
+            question_id: str | int,
+            value: str | int
+    ) -> Dict:
+        uri = f"{self._base_url}/survey/{survey_id}/surveyresponse/{response_id}"
+        data = {"data": {str(question_id): {"value": value}}}
+        return self._api_call('POST', uri, body=data)
