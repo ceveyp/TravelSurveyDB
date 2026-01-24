@@ -85,7 +85,7 @@ class Alchemer:
 
     def get_survey_response(self, survey_id: int, response_id: int) -> Dict:
         uri = f"{self._base_url}/survey/{survey_id}/surveyresponse/{response_id}"
-        return self._api_call('GET', uri)
+        return self._api_call('GET', uri)["data"]
 
     def update_survey_question_response(
             self,
@@ -96,4 +96,25 @@ class Alchemer:
     ) -> Dict:
         uri = f"{self._base_url}/survey/{survey_id}/surveyresponse/{response_id}"
         data = {"data": {str(question_id): {"value": value}}}
-        return self._api_call('POST', uri, body=data)
+        return self._api_call('POST', uri, body=data)["data"]
+
+
+def update_survey_hidden_values(
+        survey_id: int,
+        response_id: int,
+        hidden_value_name_values_map: Dict
+):
+    logger.debug(f"Updating hidden values for survey response {response_id}: {hidden_value_name_values_map}")
+    client = Alchemer()
+    data = client.get_survey_response(survey_id, response_id)
+    survey_data: Dict = data["survey_data"]
+    question_text_id_map = {}
+    for question_id, answer_data in survey_data.items():
+        question_text_id_map[answer_data["question"]] = question_id
+    for name, value in hidden_value_name_values_map.items():
+        if not name in question_text_id_map:
+            raise ValueError(f"Hidden value name does not exist in survey response: {name}")
+        question_id = question_text_id_map[name]
+        client.update_survey_question_response(survey_id, response_id, question_id, value)
+        logger.debug(f"Hidden value updated: {name}")
+    logger.debug(f"Finished updating hidden values for survey response {response_id}")

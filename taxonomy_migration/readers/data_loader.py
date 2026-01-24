@@ -6,27 +6,25 @@ from sqlalchemy.orm import joinedload
 from db.models import (
     Question,
     Disability,
-    MedicalCategory,
-    MarketData,
     QuestionCategoryMap,
-    QuestionTravelCategoryMap
+    QuestionTravelCategoryMap,
+    QuestionDisabilityMap
 )
 from db.orm import Session
+from taxonomy_migration.readers.taxonomy_data import TaxonomyData
+from utils.logger import get_logger
+
+logger = get_logger(__name__)
 
 
 class TaxonomyDataLoader:
 
     def __init__(self):
         self._question_key_entity_map: Dict[str, Question] = {}
-        self._disability_key_entity_map: Dict[str, Disability] = {}
-        self._medical_category_key_entity_map: Dict[str, MedicalCategory] = {}
-        self._travel_category_key_entity_map: Dict[str, MedicalCategory] = {}
-        self._disability_key_market_data_map: Dict[str, MarketData] = {}
+        self._question_key_taxonomy_map = defaultdict(lambda: defaultdict(dict))
 
-        self._question_key_medical_categories_map = defaultdict(Dict)
-        self._question_key_travel_categories_map = defaultdict(Dict)
-
-    def load(self):
+    def load(self) -> TaxonomyData:
+        logger.debug("Loading taxonomy data from DB")
         with Session() as db:
             questions: List[Question] = db.query(Question).all()
             for question in questions:
@@ -44,7 +42,8 @@ class TaxonomyDataLoader:
             for medical_category_map in medical_category_maps:
                 question_key = medical_category_map.question.question_key
                 medical_category_key = medical_category_map.category.key
-                self._question_key_medical_categories_map[question_key][medical_category_key] = medical_category_map
+                self._question_key_taxonomy_map[question_key]["medical_categories"][
+                    medical_category_key] = medical_category_map
 
             # Map question key to travel category
             travel_category_maps: List[QuestionTravelCategoryMap] = (
@@ -58,11 +57,25 @@ class TaxonomyDataLoader:
             for travel_category_map in travel_category_maps:
                 question_key = travel_category_map.question.question_key
                 travel_category_key = travel_category_map.travel_category.key
-                self._question_key_travel_categories_map[question_key]['']
+                self._question_key_taxonomy_map[question_key]["travel_categories"][
+                    travel_category_key] = travel_category_map
 
-            print(medical_category_maps)
-
-
-if __name__ == '__main__':
-    TaxonomyDataLoader().load()
-
+            # Map question key to disability
+            disability_maps: List[QuestionDisabilityMap] = (
+                db.query(QuestionDisabilityMap)
+                .options(
+                    joinedload(QuestionDisabilityMap.question),
+                    joinedload(QuestionDisabilityMap.disability)
+                    .joinedload(Disability.market_data)
+                )
+                .all()
+            )
+            for disability_map in disability_maps:
+                question_key = disability_map.question.question_key
+                disability_key = disability_map.disability.key
+                self._question_key_taxonomy_map[question_key]["disabilities"][disability_key] = disability_map
+        logger.debug("Finished loading taxonomy data from DB")
+        return TaxonomyData(
+            question_key_entity_map=self._question_key_taxonomy_map,
+            question_key_taxonomy_map=self._question_key_taxonomy_map
+        )

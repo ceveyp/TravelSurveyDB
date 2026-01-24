@@ -2,12 +2,12 @@ from db.models.answer import Answer
 from db.models.disability import Disability
 from db.models.hotel import Hotel
 from db.models.hotel_chain import HotelChain
-from db.models.market_data import MarketData
+from db.models.disability import MarketData
 from db.models.medical_category import MedicalCategory
 from db.models.question import Question
 from db.models.question_category_map import QuestionCategoryMap
 from db.models.question_disability_map import QuestionDisabilityMap
 from db.models.question_travel_category_map import QuestionTravelCategoryMap
 from db.models.room_type import RoomType
-from db.models.scoring_rule import ScoringRule
+from db.models.question import ScoringRule
 from db.models.travel_category import TravelCategory

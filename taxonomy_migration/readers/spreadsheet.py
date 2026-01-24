@@ -14,37 +14,21 @@ from constants.spreadsheet.column_names.questions import QuestionsColumnNamesEnu
 from constants.spreadsheet.column_names.taxonomy import TaxonomyColumnNamesEnum
 from constants.spreadsheet.taxonomy import TAXONOMY_SPREADSHEET_GRID_NAMES, TaxonomySpreadsheetGridNamesEnum
 from db.models import (
-    MarketData,
     Disability,
     Question,
-    ScoringRule,
     MedicalCategory,
     TravelCategory,
     QuestionDisabilityMap,
     QuestionTravelCategoryMap,
     QuestionCategoryMap
 )
-from db.models.question import QuestionInputValidator
+from db.models.disability import MarketData
+from db.models.question import QuestionInputValidator, ScoringRule
+from taxonomy_migration.readers.taxonomy_data import TaxonomyData
 from utils.common import get_field, normalize_field, clean_values
 from utils.logger import get_logger
 
 logger = get_logger()
-
-
-class TaxonomySheetData:
-    def __init__(
-            self,
-            question_key_entity_map: Dict[str, Question],
-            disability_key_entity_map: Dict[str, Disability],
-            medical_category_key_entity_map: Dict[str, MedicalCategory],
-            travel_category_key_entity_map: Dict[str, MedicalCategory],
-            disability_key_market_data_map: Dict[str, MarketData]
-    ):
-        self.question_key_entity_map = question_key_entity_map
-        self.disability_key_entity_map = disability_key_entity_map
-        self.medical_category_key_entity_map = medical_category_key_entity_map
-        self.travel_category_key_entity_map = travel_category_key_entity_map
-        self.disability_key_market_data_map = disability_key_market_data_map
 
 
 class TaxonomySpreadsheetReader:
@@ -60,6 +44,7 @@ class TaxonomySpreadsheetReader:
         self._medical_category_key_entity_map: Dict[str, MedicalCategory] = {}
         self._travel_category_key_entity_map: Dict[str, MedicalCategory] = {}
         self._disability_key_market_data_map: Dict[str, MarketData] = {}
+        self._question_key_taxonomy_map = defaultdict(lambda: defaultdict(dict))
 
     def _read_sheet(self, sheet: TaxonomySpreadsheetGridNamesEnum) -> List[Dict]:
         sheet = self._dfs[sheet]
@@ -93,6 +78,7 @@ class TaxonomySpreadsheetReader:
             try:
                 # Create taxonomies for this row
                 logger.debug(f"Creating taxonomies for row {i}")
+
                 disability_key = self._create_taxonomy(
                     row=row,
                     column_name=column_names.DISABILITY,
@@ -125,18 +111,21 @@ class TaxonomySpreadsheetReader:
                 question_disability_map.question = question
                 question_disability_map.disability = self._disability_key_entity_map[disability_key]
                 question_disability_map.reason = get_field(row, column_names.REASON)
+                self._question_key_taxonomy_map[question_key]["disabilities"][disability_key] = question_disability_map
 
                 # Map question to travel category
                 question_travel_category_map = QuestionTravelCategoryMap()
                 question_travel_category_map.question = question
                 question_travel_category_map.travel_category = self._travel_category_key_entity_map[travel_category_key]
+                self._question_key_taxonomy_map[question_key]["travel_categories"][
+                    travel_category_key] = question_travel_category_map
 
                 # Map question to medical category
                 question_medical_category_map = QuestionCategoryMap()
                 question_medical_category_map.question = question
                 question_medical_category_map.category = self._medical_category_key_entity_map[medical_category_key]
-
-                self._question_key_medical_categories_map[question_key].append()
+                self._question_key_taxonomy_map[question_key]["medical_categories"][
+                    medical_category_key] = question_medical_category_map
 
             except Exception as e:
                 logger.exception(e)
@@ -196,7 +185,7 @@ class TaxonomySpreadsheetReader:
                     operator='==',
                     max_score=get_field(row, QuestionsColumnNamesEnum.MAX_SCORE, float)
                 )
-                scoring_rule.question = question
+                question.scoring_rule = scoring_rule
             except Exception as e:
                 logger.exception(e)
                 logger.error(f"There was an error reading questions sheet, row {i}: {e}")
@@ -215,7 +204,6 @@ class TaxonomySpreadsheetReader:
                     raise ValueError(
                         f"Could not find disability from market data sheet in taxonomy sheet: {disability_name}"
                     )
-                disability = self._disability_key_entity_map[disability_key]
 
                 # Get market data
                 market_data_point = MarketData(
@@ -229,15 +217,15 @@ class TaxonomySpreadsheetReader:
                     definition_source=get_field(row, MarketDataColumnNamesEnum.DEFINITION_SOURCE, str),
                     definition=get_field(row, MarketDataColumnNamesEnum.DEFINITION, str)
                 )
-                market_data_point.disability = disability
-                self._disability_key_market_data_map[disability_key] = market_data_point
+                self._disability_key_entity_map[disability_key].market_data = market_data_point
+
                 logger.debug(f"Market data parsed: {market_data_point.model_dump()}")
             except Exception as e:
                 logger.exception(e)
                 logger.error(f"There was an error reading market data sheet, row {i}: {e}")
         logger.debug(f"Finished reading market data sheet")
 
-    def read(self) -> TaxonomySheetData:
+    def read(self) -> TaxonomyData:
         # Read all sheet data
         logger.debug(f"Reading excel sheet: {self._file_path}")
         self._dfs = pd.read_excel(
@@ -247,10 +235,7 @@ class TaxonomySpreadsheetReader:
         self._read_questions_sheet()
         self._read_taxonomy_sheet()
         self._read_market_data_sheet()
-        return TaxonomySheetData(
+        return TaxonomyData(
             question_key_entity_map=self._question_key_entity_map,
-            disability_key_entity_map=self._disability_key_entity_map,
-            medical_category_key_entity_map=self._medical_category_key_entity_map,
-            travel_category_key_entity_map=self._travel_category_key_entity_map,
-            disability_key_market_data_map=self._disability_key_market_data_map
+            question_key_taxonomy_map=self._question_key_taxonomy_map
         )
