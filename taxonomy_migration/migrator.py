@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Dict
+from typing import Dict, List
 
 from sqlmodel import SQLModel
 
@@ -37,6 +37,12 @@ class TaxonomyMigrator:
             "question_disability_maps": 0,
             "question_travel_category_maps": 0,
             "question_medical_category_maps": 0
+        }
+        self._update_entity_counters = {
+            "ScoringRule": 0,
+            "Question": 0,
+            "QuestionDisabilityMap": 0,
+            "MarketData": 0
         }
 
     def _add_new_entities(self, spreadsheet_entities_map: Dict[str, SQLModel], db_entities_map: Dict[str, SQLModel]):
@@ -103,12 +109,18 @@ class TaxonomyMigrator:
         print(f"\n\tAdded {self._new_entity_counters["questions"]} Questions")
         print(f"\n\tAdded {self._new_entity_counters["disabilities"]} Disabilities")
         print(f"\n\tAdded {self._new_entity_counters["travel_categories"]} Travel Categories")
-        print(f"\n\tAdded {self._new_entity_counters["medical_categories"]} Medical Categories\n")
+        print(f"\n\tAdded {self._new_entity_counters["medical_categories"]} Medical Categories")
 
         print(f"\n\tAdded {self._new_entity_counters["question_disability_maps"]} Question > Disability maps")
         print(f"\n\tAdded {self._new_entity_counters["question_travel_category_maps"]} Question > Travel Category maps")
         print(
             f"\n\tAdded {self._new_entity_counters["question_medical_category_maps"]} Question > Medical Category maps")
+
+    def _display_update_taxonomies_output(self):
+        print("\n\n--------------------------------")
+        print("\nFinished updating taxonomies:")
+        for entity_type, update_count in self._update_entity_counters.items():
+            print(f"\n\tUpdated {update_count} {entity_type} entities")
 
     def _add_new_taxonomy(self):
         """Add new taxonomy from spreadsheet to DB"""
@@ -131,18 +143,95 @@ class TaxonomyMigrator:
             self._add_new_question_travel_category_maps(question, taxonomy_maps)
             self._add_new_question_medical_category_maps(question, taxonomy_maps)
 
-        self._display_add_new_taxonomies_output()
+        self._db.commit()
+
+    def _update_entity(self, update_attrs: List[str], spreadsheet_entity: SQLModel, db_entity: SQLModel):
+        """Polymorphic method to update changes from spreadsheet entity to DB entity"""
+        for update_attr in update_attrs:
+            spreadsheet_attr = getattr(spreadsheet_entity, update_attr)
+            db_attr = getattr(db_entity, update_attr)
+            if spreadsheet_attr == db_attr:
+                continue
+            setattr(db_entity, update_attr, spreadsheet_attr)
+            entity_type_name = type(db_entity).__name__
+            logger.debug(f"Entity attribute change detected for {entity_type_name},ID {db_entity.id}: {update_attr}")
+            self._update_entity_counters[entity_type_name] += 1
+
+    def _update_taxonomy_changes(self):
+        """Update taxonomy in DB with changes in spreadsheet"""
+        logger.debug("Updating taxonomy from spreadsheet to DB")
+
+        st = self._spreadsheet_taxonomy
+        dt = self._db_taxonomy
+
+        # Update question and scoring rule entities
+        logger.debug("Updating question and scoring rule entities")
+        question_update_attrs = [
+            'definition',
+            'notes',
+            'question_type_notes',
+            'in_assessment',
+            'otc_code',
+            'otc_list_name',
+            'otc_category',
+            'measurement_text',
+            'survey_section',
+            'applies_per_room_type'
+        ]
+        scoring_rule_update_attrs = [
+            'operator',
+            'threshold_min',
+            'threshold_max',
+            'max_score'
+        ]
+        for question_key, question in st.question_key_entity_map.items():
+            db_question: Question = dt.question_key_entity_map[question_key]
+            self._update_entity(question_update_attrs, question, db_question)
+            self._update_entity(scoring_rule_update_attrs, question.scoring_rule, db_question.scoring_rule)
+
+        # Update taxonomy mapping reasons from spreadsheet to DB
+        # reason is found in QuestionDisabilityMap entity
+        logger.debug(f"Updating taxonomy mappings reasons")
+        question_disability_map_update_attrs = ['reason']
+        for question_disability_map_key, question_disability_map in st.question_disability_maps.items():
+            db_question_disability_map = dt.question_disability_maps[question_disability_map_key]
+            self._update_entity(
+                question_disability_map_update_attrs,
+                question_disability_map,
+                db_question_disability_map
+            )
+
+        # Update market data for all disability entries
+        logger.debug("Updating market data for all disabilities")
+        market_data_update_attrs = [
+            'definition',
+            'impacted',
+            'impacted_workforce',
+            'likelihood',
+            'labor_stat',
+            'statistics',
+            'statistics_source',
+            'labor_source',
+            'definition_source'
+        ]
+        for disability_key, disability in st.disability_key_entity_map.items():
+            db_disability = dt.disability_key_entity_map[disability_key]
+            self._update_entity(market_data_update_attrs, disability.market_data, db_disability.market_data)
+
+        self._db.commit()
 
     def migrate(self):
         self._spreadsheet_taxonomy = self._reader.read()
         self._db_taxonomy = self._loader.load()
         self._add_new_taxonomy()
+        self._update_taxonomy_changes()
+        self._display_add_new_taxonomies_output()
+        self._display_update_taxonomies_output()
 
 
 def migrate(file_path: str):
     with Session() as db:
         TaxonomyMigrator(db, file_path).migrate()
-        db.commit()
 
 
 if __name__ == '__main__':

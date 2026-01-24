@@ -45,6 +45,7 @@ class TaxonomySpreadsheetReader:
         self._travel_category_key_entity_map: Dict[str, TravelCategory] = {}
         self._disability_key_market_data_map: Dict[str, MarketData] = {}
         self._question_key_taxonomy_map = defaultdict(lambda: defaultdict(dict))
+        self._question_disability_maps: Dict[str, QuestionDisabilityMap] = {}
 
     def _read_sheet(self, sheet: TaxonomySpreadsheetGridNamesEnum) -> List[Dict]:
         sheet = self._dfs[sheet]
@@ -112,6 +113,11 @@ class TaxonomySpreadsheetReader:
                 question_disability_map.disability = self._disability_key_entity_map[disability_key]
                 question_disability_map.reason = get_field(row, column_names.REASON)
                 self._question_key_taxonomy_map[question_key]["disabilities"][disability_key] = question_disability_map
+
+                # Map question disability maps themselves for later indexing
+                # To update reason field in QuestionDisabilityMap
+                disability_map_key = f"{question_key}_{disability_key}"
+                self._question_disability_maps[disability_map_key] = question_disability_map
 
                 # Map question to travel category
                 question_travel_category_map = QuestionTravelCategoryMap()
@@ -240,5 +246,6 @@ class TaxonomySpreadsheetReader:
             question_key_taxonomy_map=self._question_key_taxonomy_map,
             disability_key_entity_map=self._disability_key_entity_map,
             medical_category_key_entity_map=self._medical_category_key_entity_map,
-            travel_category_key_entity_map=self._travel_category_key_entity_map
+            travel_category_key_entity_map=self._travel_category_key_entity_map,
+            question_disability_maps=self._question_disability_maps
         )

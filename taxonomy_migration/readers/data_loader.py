@@ -28,6 +28,7 @@ class TaxonomyDataLoader:
         self._disability_key_entity_map: Dict[str, Disability] = {}
         self._medical_category_key_entity_map: Dict[str, MedicalCategory] = {}
         self._travel_category_key_entity_map: Dict[str, TravelCategory] = {}
+        self._question_disability_maps: Dict[str, QuestionDisabilityMap] = {}
 
     def _fetch_taxonomy_key_entity_map(self, entity_type: Type[SQLModel], entity_map: Dict[str, SQLModel]):
         entities = self._db.query(entity_type).all()
@@ -69,11 +70,17 @@ class TaxonomyDataLoader:
             disability_key = disability_map.disability.key
             tx_map[question_key]["disabilities"][disability_key] = disability_map
 
+            # Map question disability maps themselves for later indexing
+            # To update reason field in QuestionDisabilityMap
+            disability_map_key = f"{question_key}_{disability_key}"
+            self._question_disability_maps[disability_map_key] = disability_map
+
         logger.debug("Finished loading taxonomy data from DB")
         return TaxonomyData(
             question_key_entity_map=self._question_key_entity_map,
             question_key_taxonomy_map=self._question_key_taxonomy_map,
             disability_key_entity_map=self._disability_key_entity_map,
             medical_category_key_entity_map=self._medical_category_key_entity_map,
-            travel_category_key_entity_map=self._travel_category_key_entity_map
+            travel_category_key_entity_map=self._travel_category_key_entity_map,
+            question_disability_maps=self._question_disability_maps
         )
