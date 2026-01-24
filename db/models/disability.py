@@ -1,6 +1,6 @@
 from typing import Optional
 
-from sqlalchemy import Column, BigInteger, ForeignKey
+from sqlalchemy import Column, BigInteger, ForeignKey, Text
 from sqlmodel import SQLModel, Field, Relationship
 
 
@@ -24,12 +24,12 @@ class MarketData(SQLModel, table=True):
         )
     )
     disability: Optional["Disability"] = Relationship(back_populates="market_data")
-    definition: str = Field(nullable=False)
-    impacted: int = Field(nullable=False)
-    impacted_workforce: int = Field(nullable=False)
-    likelihood: float = Field(nullable=False)
-    labor_stat: float = Field(nullable=False)
-    statistics: str = Field(nullable=False)
-    statistics_source: str = Field(nullable=False, max_length=500)
-    labor_source: str = Field(nullable=False, max_length=500)
-    definition_source: str = Field(nullable=False, max_length=500)
+    definition: Optional[str] = Field(nullable=True, default=None, sa_type=Text)
+    impacted: Optional[int] = Field(nullable=True, default=None)
+    impacted_workforce: Optional[int] = Field(nullable=True, default=None)
+    likelihood: Optional[float] = Field(nullable=True, default=None)
+    labor_stat: Optional[float] = Field(nullable=True, default=None)
+    statistics: Optional[str] = Field(nullable=True, default=None, sa_type=Text)
+    statistics_source: Optional[str] = Field(nullable=True, default=None, sa_type=Text)
+    labor_source: Optional[str] = Field(nullable=True, default=None, sa_type=Text)
+    definition_source: Optional[str] = Field(nullable=True, default=None, sa_type=Text)

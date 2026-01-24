@@ -42,7 +42,7 @@ class TaxonomySpreadsheetReader:
         self._question_key_entity_map: Dict[str, Question] = {}
         self._disability_key_entity_map: Dict[str, Disability] = {}
         self._medical_category_key_entity_map: Dict[str, MedicalCategory] = {}
-        self._travel_category_key_entity_map: Dict[str, MedicalCategory] = {}
+        self._travel_category_key_entity_map: Dict[str, TravelCategory] = {}
         self._disability_key_market_data_map: Dict[str, MarketData] = {}
         self._question_key_taxonomy_map = defaultdict(lambda: defaultdict(dict))
 
@@ -237,5 +237,8 @@ class TaxonomySpreadsheetReader:
         self._read_market_data_sheet()
         return TaxonomyData(
             question_key_entity_map=self._question_key_entity_map,
-            question_key_taxonomy_map=self._question_key_taxonomy_map
+            question_key_taxonomy_map=self._question_key_taxonomy_map,
+            disability_key_entity_map=self._disability_key_entity_map,
+            medical_category_key_entity_map=self._medical_category_key_entity_map,
+            travel_category_key_entity_map=self._travel_category_key_entity_map
         )
