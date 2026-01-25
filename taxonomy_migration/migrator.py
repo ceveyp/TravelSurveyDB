@@ -1,7 +1,7 @@
+from collections import defaultdict
 from pathlib import Path
 from typing import Dict, List
 
-from sqlalchemy import delete
 from sqlmodel import SQLModel
 
 from db.models import (
@@ -116,15 +116,15 @@ class TaxonomyMigrator:
     def _display_add_new_taxonomies_output(self):
         print("--------------------------------")
         print("\nFinished adding new taxonomies:")
-        print(f"\n\tAdded {self._new_entity_counters["questions"]} Questions")
-        print(f"\n\tAdded {self._new_entity_counters["disabilities"]} Disabilities")
-        print(f"\n\tAdded {self._new_entity_counters["travel_categories"]} Travel Categories")
-        print(f"\n\tAdded {self._new_entity_counters["medical_categories"]} Medical Categories")
+        print(f"\n\tAdded {self._new_entity_counters['questions']} Questions")
+        print(f"\n\tAdded {self._new_entity_counters['disabilities']} Disabilities")
+        print(f"\n\tAdded {self._new_entity_counters['travel_categories']} Travel Categories")
+        print(f"\n\tAdded {self._new_entity_counters['medical_categories']} Medical Categories")
 
-        print(f"\n\tAdded {self._new_entity_counters["question_disability_maps"]} Question > Disability maps")
-        print(f"\n\tAdded {self._new_entity_counters["question_travel_category_maps"]} Question > Travel Category maps")
+        print(f"\n\tAdded {self._new_entity_counters['question_disability_maps']} Question > Disability maps")
+        print(f"\n\tAdded {self._new_entity_counters['question_travel_category_maps']} Question > Travel Category maps")
         print(
-            f"\n\tAdded {self._new_entity_counters["question_medical_category_maps"]} Question > Medical Category maps")
+            f"\n\tAdded {self._new_entity_counters['question_medical_category_maps']} Question > Medical Category maps")
 
     def _display_update_taxonomies_output(self):
         print("\n\n--------------------------------")
@@ -242,20 +242,23 @@ class TaxonomyMigrator:
         entity_type = type(entity).__name__
         self._delete_entity_counters[entity_type] += 1
 
-    def _delete_entity_if_not_exists(self, entity_key: str, entity_map: Dict, entity: SQLModel):
-        if entity_key in entity_map:
-            return
-        self._delete_entity(entity)
-
     def _delete_entities(self, db_entity_map: Dict, spreadsheet_entity_map: Dict):
-        for entity_key, entity in db_entity_map.items():
-            self._delete_entity_if_not_exists(entity_key, spreadsheet_entity_map, entity)
+        deleted_entities = []
+        for entity_key, entity in list(db_entity_map.items()):
+            if entity_key in spreadsheet_entity_map:
+                continue
+            self._delete_entity(entity)
+            deleted_entities.append(entity_key)
+        for deleted_entity in deleted_entities:
+            del db_entity_map[deleted_entity]
 
     def _delete_taxonomy_mappings(self):
         """Delete entity mappings which don't exist in spreadsheet"""
         logger.debug("Deleting entity mappings")
         for question_key, taxonomy_maps in self._db_taxonomy.question_key_taxonomy_map.items():
-            spreadsheet_taxonomy_maps = self._spreadsheet_taxonomy.question_key_taxonomy_map[question_key]
+            spreadsheet_taxonomy_maps = self._spreadsheet_taxonomy.question_key_taxonomy_map.get(
+                question_key, defaultdict(dict)
+            )
 
             # Delete disability maps
             for disability_key, disability_map in taxonomy_maps["disabilities"].items():
