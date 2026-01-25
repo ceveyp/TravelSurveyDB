@@ -1,6 +1,7 @@
 from pathlib import Path
 from typing import Dict, List
 
+from sqlalchemy import delete
 from sqlmodel import SQLModel
 
 from db.models import (
@@ -43,6 +44,15 @@ class TaxonomyMigrator:
             "Question": 0,
             "QuestionDisabilityMap": 0,
             "MarketData": 0
+        }
+        self._delete_entity_counters = {
+            "Question": 0,
+            "Disability": 0,
+            "MedicalCategory": 0,
+            "TravelCategory": 0,
+            "QuestionDisabilityMap": 0,
+            "QuestionTravelCategoryMap": 0,
+            "QuestionCategoryMap": 0
         }
 
     def _add_new_entities(self, spreadsheet_entities_map: Dict[str, SQLModel], db_entities_map: Dict[str, SQLModel]):
@@ -121,6 +131,12 @@ class TaxonomyMigrator:
         print("\nFinished updating taxonomies:")
         for entity_type, update_count in self._update_entity_counters.items():
             print(f"\n\tUpdated {update_count} {entity_type} entities")
+
+    def _display_delete_taxonomies_output(self):
+        print("\n\n--------------------------------")
+        print("\nFinished deleting taxonomies:")
+        for entity_type, update_count in self._delete_entity_counters.items():
+            print(f"\n\tDeleted {update_count} {entity_type} entities")
 
     def _add_new_taxonomy(self):
         """Add new taxonomy from spreadsheet to DB"""
@@ -220,13 +236,73 @@ class TaxonomyMigrator:
 
         self._db.commit()
 
+    def _delete_entity(self, entity: SQLModel):
+        logger.debug(f"Marked one entity for deletion: {entity.model_dump()}")
+        self._db.delete(entity)
+        entity_type = type(entity).__name__
+        self._delete_entity_counters[entity_type] += 1
+
+    def _delete_entity_if_not_exists(self, entity_key: str, entity_map: Dict, entity: SQLModel):
+        if entity_key in entity_map:
+            return
+        self._delete_entity(entity)
+
+    def _delete_entities(self, db_entity_map: Dict, spreadsheet_entity_map: Dict):
+        for entity_key, entity in db_entity_map.items():
+            self._delete_entity_if_not_exists(entity_key, spreadsheet_entity_map, entity)
+
+    def _delete_taxonomy_mappings(self):
+        """Delete entity mappings which don't exist in spreadsheet"""
+        logger.debug("Deleting entity mappings")
+        for question_key, taxonomy_maps in self._db_taxonomy.question_key_taxonomy_map.items():
+            spreadsheet_taxonomy_maps = self._spreadsheet_taxonomy.question_key_taxonomy_map[question_key]
+
+            # Delete disability maps
+            for disability_key, disability_map in taxonomy_maps["disabilities"].items():
+                if disability_key in spreadsheet_taxonomy_maps["disabilities"]:
+                    continue
+                self._delete_entity(disability_map)
+
+            # Delete travel category maps
+            for travel_category_key, travel_category_map in taxonomy_maps["travel_categories"].items():
+                if travel_category_key in spreadsheet_taxonomy_maps["travel_categories"]:
+                    continue
+                self._delete_entity(travel_category_map)
+
+            # Delete medical category maps
+            for medical_category_key, medical_category_map in taxonomy_maps["medical_categories"].items():
+                if medical_category_key in spreadsheet_taxonomy_maps["medical_categories"]:
+                    continue
+                self._delete_entity(medical_category_map)
+
+    def _delete_missing_taxonomy(self):
+        """Delete taxonomy from DB that no longer exists in spreadsheet"""
+        logger.debug("Deleting taxonomy from DB that no longer exists in spreadsheet")
+
+        st = self._spreadsheet_taxonomy
+        dt = self._db_taxonomy
+
+        # Delete entities which don't exist in spreadsheet
+        self._delete_entities(dt.question_key_entity_map, st.question_key_entity_map)
+        self._delete_entities(dt.travel_category_key_entity_map, st.travel_category_key_entity_map)
+        self._delete_entities(dt.disability_key_entity_map, st.disability_key_entity_map)
+        self._delete_entities(dt.medical_category_key_entity_map, st.medical_category_key_entity_map)
+
+        # Delete entity mappings which don't exist in spreadsheet
+        self._delete_taxonomy_mappings()
+
+        logger.debug("Finished checking for deletions")
+        self._db.commit()
+
     def migrate(self):
         self._spreadsheet_taxonomy = self._reader.read()
         self._db_taxonomy = self._loader.load()
         self._add_new_taxonomy()
         self._update_taxonomy_changes()
+        self._delete_missing_taxonomy()
         self._display_add_new_taxonomies_output()
         self._display_update_taxonomies_output()
+        self._display_delete_taxonomies_output()
 
 
 def migrate(file_path: str):
@@ -235,4 +311,4 @@ def migrate(file_path: str):
 
 
 if __name__ == '__main__':
-    migrate(r"C:/Users/phili/Documents/Jobs/TravelDB/taxonomy_new.xlsx")
+    migrate(r"C:/Users/phili/Documents/Jobs/TravelDB/taxonomy_new2.xlsx")

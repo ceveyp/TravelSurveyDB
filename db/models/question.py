@@ -20,7 +20,13 @@ class Question(SQLModel, table=True):
     __tablename__ = "questions"
 
     id: Optional[int] = Field(default=None, primary_key=True, sa_type=BigInteger)
-    scoring_rule: Optional["ScoringRule"] = Relationship(back_populates="question")
+    scoring_rule: Optional["ScoringRule"] = Relationship(
+        back_populates="question",
+        sa_relationship_kwargs={
+            "cascade": "all, delete-orphan",
+            "passive_deletes": True,
+        },
+    )
 
     question_text: str = Field(nullable=False, sa_type=Text)
     question_key: str = Field(nullable=False, index=True, sa_type=Text)
