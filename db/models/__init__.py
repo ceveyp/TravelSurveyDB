@@ -11,3 +11,4 @@ from db.models.question_travel_category_map import QuestionTravelCategoryMap
 from db.models.room_type import RoomType
 from db.models.question import ScoringRule
 from db.models.travel_category import TravelCategory
+from db.models.survey_response import SurveyResponse

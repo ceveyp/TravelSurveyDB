@@ -1,8 +1,11 @@
+import os
 from functools import lru_cache
 from pathlib import Path
 
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+from clients.secrets_manager import SecretsManager
 
 ENV_FILE_PATH = Path(__file__).parent.parent / ".env"
 
@@ -16,8 +19,8 @@ class Settings(BaseSettings):
     google_api_key: str
     alchemer_api_key: str
     alchemer_api_secret: str
+    webhook_secret: str
     log_level: str = Field(default='DEBUG')
-
 
     model_config = SettingsConfigDict(
         env_file=ENV_FILE_PATH,
@@ -29,4 +32,11 @@ class Settings(BaseSettings):
 
 @lru_cache
 def get_config() -> Settings:
+    secret_name = os.environ.get("SECRETS_NAME")
+
+    if secret_name:
+        secrets = SecretsManager(secret_name).get_secrets()
+        for key, value in secrets.items():
+            os.environ.setdefault(key, str(value))
+
     return Settings()

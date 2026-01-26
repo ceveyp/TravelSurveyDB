@@ -210,6 +210,8 @@ class TaxonomyMigrator:
         logger.debug(f"Updating taxonomy mappings reasons")
         question_disability_map_update_attrs = ['reason']
         for question_disability_map_key, question_disability_map in st.question_disability_maps.items():
+            if not dt.question_disability_maps.get(question_disability_map_key):
+                continue
             db_question_disability_map = dt.question_disability_maps[question_disability_map_key]
             self._update_entity(
                 question_disability_map_update_attrs,
@@ -311,7 +313,3 @@ class TaxonomyMigrator:
 def migrate(file_path: str):
     with Session() as db:
         TaxonomyMigrator(db, file_path).migrate()
-
-
-if __name__ == '__main__':
-    migrate(r"C:/Users/phili/Documents/Jobs/TravelDB/taxonomy_new2.xlsx")

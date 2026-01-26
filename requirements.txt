@@ -8,3 +8,5 @@ odfpy
 openpyxl
 requests
 email-validator
+boto3
+botocore
