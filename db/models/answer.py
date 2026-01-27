@@ -11,12 +11,13 @@ from db.models.room_type import RoomType
 class Answer(SQLModel, table=True):
     __tablename__ = 'answers'
     id: Optional[int] = Field(default=None, primary_key=True, sa_type=BigInteger)
-    room_type_id: int = Field(
+    room_type_id: Optional[int] = Field(
         sa_column=Column(
             BigInteger,
             ForeignKey("room_types.id", ondelete="CASCADE"),
-            nullable=False,
-            index=True
+            nullable=True,
+            index=True,
+            default=None
         )
     )
     room_type: Optional["RoomType"] = Relationship()
@@ -39,4 +40,4 @@ class Answer(SQLModel, table=True):
     )
     question: Optional["Question"] = Relationship()
     raw_response: str = Field(min_length=1, nullable=False)
-    normalized_score: float = Field(nullable=False)
+    normalized_score: Optional[float] = Field(nullable=True, default=None)

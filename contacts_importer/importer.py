@@ -8,7 +8,7 @@ from db.models import Hotel, HotelChain
 from db.models.hotel import HotelContact
 from db.orm import Session
 from utils.alchemer import Alchemer
-from utils.logger import get_logger, setup_logging
+from utils.logger import get_logger
 
 logger = get_logger(__name__)
 
@@ -120,8 +120,3 @@ class ContactsImporter:
 def import_contacts(file_path: str, contact_list_name: str):
     with Session() as db:
         ContactsImporter(db, file_path, contact_list_name).import_contacts()
-
-
-if __name__ == '__main__':
-    setup_logging()
-    import_contacts(r"C:/Users/phili/Documents/Jobs/TravelDB/contacts.xlsx", "hotel-contacts-test")

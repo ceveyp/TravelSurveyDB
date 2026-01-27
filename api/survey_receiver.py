@@ -1,6 +1,7 @@
 import json
 from base64 import b64decode
 
+from clients.sqs import SQS
 from db.models import SurveyResponse
 from db.orm import Session
 from utils.config import get_config
@@ -58,6 +59,30 @@ def survey_receiver(event, context):
         try:
             data = body["data"]
             survey_id = data["survey_id"]
+            response_status = data["response_status"]
+            is_test = bool(data["is_test"])
+
+            # Only ingest travel surveys
+            if not survey_id == config.travel_db_survey_id:
+                logger.debug(f"Submitted survey is not a travel DB survey, exiting: {survey_id}")
+                return {
+                    'statusCode': 200,
+                    'body': json.dumps({"status": "ok"})
+                }
+
+            # Only ingest completed surveys
+            if not response_status == "Complete":
+                logger.debug(f"Survey has not been fully completed, existing")
+                return {
+                    'statusCode': 200,
+                    'body': json.dumps({"status": "ok"})
+                }
+
+            # Handle test surveys later
+            if is_test:
+                logger.debug(f"Survey submission is a test")
+
+            logger.debug(f"Survey is a travel survey: {survey_id}")
             response_id = data["response_id"]
             logger.debug(f"Survey ID: {survey_id}")
             logger.debug(f"Response ID: {response_id}")
@@ -74,6 +99,12 @@ def survey_receiver(event, context):
                 response_id = response.id
                 logger.debug(f"DB response ID: {response_id}")
                 db.commit()
+
+            # Send message on to configured SQS queue
+            logger.debug(f"Sending SQS message")
+            sqs_resp = SQS().send({"id": response_id, "action": "process_survey"})
+            logger.debug(f"SQS message sent: {sqs_resp}")
+
         except Exception as e:
             logger.exception(e)
             logger.error(f"Error creating survey response: {e}")
@@ -83,7 +114,7 @@ def survey_receiver(event, context):
         logger.debug(f"Survey created: {response_id}")
         return {
             'statusCode': 200,
-            'body': json.dumps({"id": response_id})
+            'body': json.dumps({"status": "ok"})
         }
     except Exception as e:
         logger.exception(e)

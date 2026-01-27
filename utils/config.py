@@ -20,6 +20,8 @@ class Settings(BaseSettings):
     alchemer_api_key: str
     alchemer_api_secret: str
     webhook_secret: str
+    sqs_queue_url: str
+    travel_db_survey_id: int
     log_level: str = Field(default='DEBUG')
 
     model_config = SettingsConfigDict(
