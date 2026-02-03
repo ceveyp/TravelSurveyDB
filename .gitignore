@@ -12,3 +12,4 @@ constants/__pycache__/
 alembic/versions/__pycache__/
 clients/__pycache__/
 contacts_importer/__pycache__/
+/debug.py

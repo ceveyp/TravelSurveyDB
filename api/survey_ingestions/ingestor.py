@@ -99,7 +99,7 @@ class SurveyIngestor:
 
             self._db.add(answer)
 
-    def ingest(self, survey_id: int, response_id: int):
+    def ingest(self, response_id: int):
         """Ingest survey and response into DB"""
         logger.debug(f"Ingesting survey responses into DB: {response_id}")
 
@@ -107,8 +107,7 @@ class SurveyIngestor:
         logger.debug(f"Fetching response from DB: {response_id}")
         response: SurveyResponse | None = (
             self._db.query(SurveyResponse)
-            .filter(SurveyResponse.survey_id == survey_id)
-            .filter(SurveyResponse.response_id == response_id)
+            .filter(SurveyResponse.id == response_id)
             .one_or_none()
         )
         if not response:
@@ -117,7 +116,7 @@ class SurveyIngestor:
         # Fetch survey and answers from Alchemer
         logger.debug(f"Fetching Alchemer survey response: {response_id}")
         alchemer = Alchemer()
-        resp = alchemer.get_survey_response(survey_id, response_id)
+        resp = alchemer.get_survey_response(response.survey_id, response.response_id)
         survey_data: Dict = resp["survey_data"]
 
         # Map question keys to DB entities
